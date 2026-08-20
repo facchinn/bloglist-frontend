@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Blog from './components/Blog'
+import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -8,7 +9,7 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [errorMessage, setErrorMessage] = useState(null)
+  const [notification, setNotification] = useState(null)
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
   const [url, setUrl] = useState('')
@@ -29,6 +30,13 @@ const App = () => {
     }
   }, [])
 
+  const showNotification = message => {
+    setNotification(message)
+    setTimeout(() => {
+      setNotification(null)
+    }, 5000)
+  }
+
   const handleLogin = async event => {
     event.preventDefault()
 
@@ -44,12 +52,9 @@ const App = () => {
       setUser(loggedUser)
       setUsername('')
       setPassword('')
-      setErrorMessage(null)
+      setNotification(null)
     } catch {
-      setErrorMessage('wrong username or password')
-      setTimeout(() => {
-        setErrorMessage(null)
-      }, 5000)
+      showNotification('wrong username or password')
     }
   }
 
@@ -62,17 +67,22 @@ const App = () => {
   const handleCreateBlog = async event => {
     event.preventDefault()
 
-    const newBlog = await blogService.create({
-      title,
-      author,
-      url,
-      likes: 0
-    })
+    try {
+      const newBlog = await blogService.create({
+        title,
+        author,
+        url,
+        likes: 0
+      })
 
-    setBlogs(blogs.concat(newBlog))
-    setTitle('')
-    setAuthor('')
-    setUrl('')
+      setBlogs(blogs.concat(newBlog))
+      setTitle('')
+      setAuthor('')
+      setUrl('')
+      showNotification(`a new blog ${newBlog.title} by ${newBlog.author} added`)
+    } catch {
+      showNotification('blog could not be created')
+    }
   }
 
   if (user === null) {
@@ -80,7 +90,7 @@ const App = () => {
       <div>
         <h2>Log in to application</h2>
 
-        {errorMessage && <div>{errorMessage}</div>}
+        <Notification message={notification} />
 
         <form onSubmit={handleLogin}>
           <div>
@@ -112,6 +122,9 @@ const App = () => {
   return (
     <div>
       <h2>blogs</h2>
+
+      <Notification message={notification} />
+
       <p>
         {user.name} logged in{' '}
         <button type="button" onClick={handleLogout}>logout</button>
