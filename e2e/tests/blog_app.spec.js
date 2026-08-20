@@ -46,7 +46,8 @@ describe('Blog app', () => {
         url: 'https://example.com/playwright'
       })
 
-      await expect(page.getByText('Playwright created blog', { exact: false })).toBeVisible()
+      const blog = page.locator('.blog').filter({ hasText: 'Playwright created blog' })
+      await expect(blog).toBeVisible()
     })
 
     test('a blog can be liked', async ({ page }) => {
@@ -76,7 +77,7 @@ describe('Blog app', () => {
       page.once('dialog', dialog => dialog.accept())
       await blog.getByRole('button', { name: 'remove' }).click()
 
-      await expect(page.getByText('Blog to remove', { exact: false })).not.toBeVisible()
+      await expect(blog).toHaveCount(0)
     })
 
     test('only the creator sees the remove button', async ({ page, request }) => {
@@ -123,8 +124,10 @@ describe('Blog app', () => {
       const likeBlog = async (title, times) => {
         const blog = page.locator('.blog').filter({ hasText: title })
         await blog.getByRole('button', { name: 'view' }).click()
-        for (let i = 0; i < times; i += 1) {
+
+        for (let i = 1; i <= times; i += 1) {
           await blog.getByRole('button', { name: 'like' }).click()
+          await expect(blog.getByText(`likes ${i}`, { exact: false })).toBeVisible()
         }
       }
 
