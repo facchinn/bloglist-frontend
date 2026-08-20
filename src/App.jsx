@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Blog from './components/Blog'
+import BlogForm from './components/BlogForm'
 import Notification from './components/Notification'
 import Togglable from './components/Togglable'
 import blogService from './services/blogs'
@@ -11,9 +12,6 @@ const App = () => {
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
   const [notification, setNotification] = useState(null)
-  const [title, setTitle] = useState('')
-  const [author, setAuthor] = useState('')
-  const [url, setUrl] = useState('')
   const blogFormRef = useRef()
 
   useEffect(() => {
@@ -66,25 +64,62 @@ const App = () => {
     setUser(null)
   }
 
-  const handleCreateBlog = async event => {
-    event.preventDefault()
-
+  const createBlog = async blogObject => {
     try {
-      const newBlog = await blogService.create({
-        title,
-        author,
-        url,
-        likes: 0
-      })
+      const returnedBlog = await blogService.create(blogObject)
+      const createdBlog = {
+        ...returnedBlog,
+        user: {
+          id: typeof returnedBlog.user === 'string'
+            ? returnedBlog.user
+            : returnedBlog.user?.id,
+          username: user.username,
+          name: user.name
+        }
+      }
 
-      setBlogs(blogs.concat(newBlog))
-      setTitle('')
-      setAuthor('')
-      setUrl('')
+      setBlogs(blogs.concat(createdBlog))
       blogFormRef.current.toggleVisibility()
-      showNotification(`a new blog ${newBlog.title} by ${newBlog.author} added`)
+      showNotification(`a new blog ${createdBlog.title} by ${createdBlog.author} added`)
+      return true
     } catch {
       showNotification('blog could not be created')
+      return false
+    }
+  }
+
+  const handleLike = async blog => {
+    const userId = typeof blog.user === 'object' ? blog.user?.id : blog.user
+    const blogToUpdate = {
+      title: blog.title,
+      author: blog.author,
+      url: blog.url,
+      likes: blog.likes + 1,
+      user: userId
+    }
+
+    try {
+      const returnedBlog = await blogService.update(blog.id, blogToUpdate)
+      setBlogs(blogs.map(currentBlog =>
+        currentBlog.id === blog.id
+          ? { ...returnedBlog, user: blog.user }
+          : currentBlog
+      ))
+    } catch {
+      showNotification('blog could not be liked')
+    }
+  }
+
+  const handleRemove = async blog => {
+    const confirmed = window.confirm(`Remove blog ${blog.title} by ${blog.author}?`)
+
+    if (!confirmed) return
+
+    try {
+      await blogService.remove(blog.id)
+      setBlogs(blogs.filter(currentBlog => currentBlog.id !== blog.id))
+    } catch {
+      showNotification('blog could not be removed')
     }
   }
 
@@ -122,6 +157,8 @@ const App = () => {
     )
   }
 
+  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes)
+
   return (
     <div>
       <h2>blogs</h2>
@@ -134,35 +171,17 @@ const App = () => {
       </p>
 
       <Togglable buttonLabel="create new blog" ref={blogFormRef}>
-        <h2>create new</h2>
-        <form onSubmit={handleCreateBlog}>
-          <div>
-            title:
-            <input
-              value={title}
-              onChange={({ target }) => setTitle(target.value)}
-            />
-          </div>
-          <div>
-            author:
-            <input
-              value={author}
-              onChange={({ target }) => setAuthor(target.value)}
-            />
-          </div>
-          <div>
-            url:
-            <input
-              value={url}
-              onChange={({ target }) => setUrl(target.value)}
-            />
-          </div>
-          <button type="submit">create</button>
-        </form>
+        <BlogForm createBlog={createBlog} />
       </Togglable>
 
-      {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} />
+      {sortedBlogs.map(blog =>
+        <Blog
+          key={blog.id}
+          blog={blog}
+          handleLike={handleLike}
+          handleRemove={handleRemove}
+          currentUser={user}
+        />
       )}
     </div>
   )
