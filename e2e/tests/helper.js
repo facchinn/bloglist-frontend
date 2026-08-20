@@ -10,7 +10,11 @@ const createBlog = async (page, { title, author, url }) => {
   await page.locator('input[name="author"]').fill(author)
   await page.locator('input[name="url"]').fill(url)
   await page.getByRole('button', { name: 'create' }).click()
-  await page.getByText(title, { exact: false }).waitFor()
+
+  await page
+    .locator('.blog')
+    .filter({ hasText: title })
+    .waitFor()
 }
 
 module.exports = { loginWith, createBlog }
