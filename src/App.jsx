@@ -41,34 +41,48 @@ const Button = styled.button`
   cursor: pointer;
 `
 
+const StyledForm = styled.form`
+  max-width: 420px;
+  display: grid;
+  gap: 12px;
+`
+
+const Field = styled.label`
+  display: grid;
+  gap: 4px;
+  font-weight: 600;
+`
+
+const Input = styled.input`
+  padding: 8px;
+  border: 1px solid #bbbbbb;
+  border-radius: 5px;
+`
+
 const LoginForm = ({ username, password, setUsername, setPassword, handleLogin }) => (
   <div>
     <h2>Log in to application</h2>
-    <form onSubmit={handleLogin}>
-      <div>
-        <label>
-          username
-          <input
-            name="username"
-            type="text"
-            value={username}
-            onChange={({ target }) => setUsername(target.value)}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          password
-          <input
-            name="password"
-            type="password"
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
-          />
-        </label>
-      </div>
+    <StyledForm onSubmit={handleLogin}>
+      <Field>
+        username
+        <Input
+          name="username"
+          type="text"
+          value={username}
+          onChange={({ target }) => setUsername(target.value)}
+        />
+      </Field>
+      <Field>
+        password
+        <Input
+          name="password"
+          type="password"
+          value={password}
+          onChange={({ target }) => setPassword(target.value)}
+        />
+      </Field>
       <Button type="submit">login</Button>
-    </form>
+    </StyledForm>
   </div>
 )
 
