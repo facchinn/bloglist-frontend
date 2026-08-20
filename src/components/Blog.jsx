@@ -1,41 +1,63 @@
-import { useState } from 'react'
+import styled from 'styled-components'
+
+const Card = styled.div`
+  padding: 24px;
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+  background: #fafafa;
+`
+
+const Title = styled.h2`
+  margin-top: 0;
+`
+
+const Url = styled.a`
+  display: inline-block;
+  margin-bottom: 14px;
+`
+
+const Actions = styled.div`
+  display: flex;
+  gap: 10px;
+  margin: 14px 0;
+`
+
+const Button = styled.button`
+  padding: 7px 12px;
+  border: 1px solid #999999;
+  border-radius: 5px;
+  cursor: pointer;
+`
+
+const RemoveButton = styled(Button)`
+  border-color: #b00020;
+`
 
 const Blog = ({ blog, handleLike, handleRemove, currentUser }) => {
-  const [visible, setVisible] = useState(false)
-
-  const blogStyle = {
-    paddingTop: 10,
-    paddingLeft: 2,
-    border: 'solid',
-    borderWidth: 1,
-    marginBottom: 5
-  }
-
-  const detailsStyle = { display: visible ? '' : 'none' }
-  const buttonLabel = visible ? 'hide' : 'view'
-  const canRemove = blog.user && blog.user.username === currentUser?.username
+  const canRemove = Boolean(
+    currentUser &&
+    blog.user &&
+    blog.user.username === currentUser.username
+  )
 
   return (
-    <div className="blog" style={blogStyle}>
-      <div>
-        {blog.title} {blog.author}{' '}
-        <button type="button" onClick={() => setVisible(!visible)}>
-          {buttonLabel}
-        </button>
-      </div>
+    <Card className="blogDetails">
+      <Title>{blog.title} {blog.author}</Title>
+      <Url href={blog.url}>{blog.url}</Url>
+      <div>likes {blog.likes}</div>
+      <div>added by {blog.user?.name || 'unknown'}</div>
 
-      <div className="blogDetails" style={detailsStyle}>
-        <div>{blog.url}</div>
-        <div>
-          likes {blog.likes}{' '}
-          <button type="button" onClick={() => handleLike(blog)}>like</button>
-        </div>
-        <div>{blog.user?.name}</div>
-        {canRemove && (
-          <button type="button" onClick={() => handleRemove(blog)}>remove</button>
-        )}
-      </div>
-    </div>
+      {currentUser && (
+        <Actions>
+          <Button type="button" onClick={() => handleLike(blog)}>like</Button>
+          {canRemove && (
+            <RemoveButton type="button" onClick={() => handleRemove(blog)}>
+              remove
+            </RemoveButton>
+          )}
+        </Actions>
+      )}
+    </Card>
   )
 }
 
